@@ -15,13 +15,14 @@ B = np.eye(d, d)
 prior_mean = np.zeros((d, d))
 prior_precision = np.zeros((d, d, d))
 for j in range(d):
-    prior_precision[j] =  np.diag(abs(np.random.randn(d)))
+    # prior_precision[j] =  np.diag(abs(np.random.randn(d)))
+    prior_precision[j] =  np.eye(d) + 0.01*np.diag(abs(np.random.randn(d)))
 
 
 sigma = 1
 gamma = np.sqrt(1000)
-T = 25000
-n_samples = 10
+T = 25
+n_samples = 100
 
 
 def dynamics_step(x, u):
