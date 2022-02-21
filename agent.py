@@ -1,88 +1,131 @@
 import numpy as np
 from numpy.linalg import norm
 from scipy.linalg import solve
+import torch
 
-from quadratic import approximate_D_optimal
+from quadratic import *
+from planning import Planning
+
 
 class Agent:
 
-    def __init__(self, dynamics, B, gamma, sigma, mean, precision, method):
+    def __init__(self, dynamics_step, B, gamma, sigma, A_0, M_0, x0=None):
 
-        self.step = dynamics
+        self.dynamics_step = dynamics_step
         self.B = B
 
         self.gamma = gamma
         self.sigma = sigma
 
-        self.d = mean.shape[0]
+        self.d = A_0.shape[0]
         _, self.m = B.shape
 
-        self.mean = mean.copy() #shape [d, d]
-        self.precision = precision.copy() #shape [d, d, d]
-        
+        self.A_t = A_0.copy()  # shape [d, d]
+        self.M_t = M_0.copy()  # shape [d, d, d]
 
         u_0 = self.draw_random_control()
 
-        x_0 = np.zeros(self.d)
+        x = x0 if x0 is not None else np.zeros(self.d)
 
-        x_1 = dynamics(x_0, u_0)
-        self.update_posterior(x_0, x_1, u_0)
-        
-        self.x, self.u = x_1, u_0
+        # x_1 = dynamics(x_0, u_0)
+        # self.online_OLS(x_0, x_1, u_0)
 
-        self.estimations_values = [self.mean.copy()]
-        self.u_values = [self.u]
+        # self.x, self.u = x_1, u_0
 
-        control_methods = {'linear-BOD':self.online_planning, 'random': self.draw_random_control}
-        self.choose_control = control_methods[method]
+        self.x = x
 
-    def online_planning(self):
-        M = self.precision.mean(axis=0)
-        u = approximate_D_optimal(M, self.mean, self.B, self.x, self.gamma)
-        u *= self.gamma / norm(u)
-        return u
+        # control_methods = {
+        #     'OD': self.one_step_planning,
+        #     'random': self.draw_random_control
+        # }
+        # self.choose_control = control_methods[method]
 
     def draw_random_control(self):
         u = np.random.randn(self.m)
         u *= self.gamma/norm(u)
         return u
-
     
-    def update_posterior(self, x_t, x_t_, u_t):
+    def plan(self, T):
+        return
+
+    def identify(self, T, A_star=None):
+
+        self.A_star = A_star
+
+        self.A_t_values = np.zeros((T+1, self.d, self.d))
+        self.A_t_values[0] = self.A_t
+        self.u_values = np.zeros((T, self.m))
+        
+        for t in range(T):
+            
+            u_t = self.choose_control(t)
+            self.u = u_t
+
+            x_t_ = self.dynamics_step(self.x, u_t)
+
+            self.online_OLS(self.x, x_t_, u_t)
+            self.x = x_t_
+
+            self.A_t_values[t+1] = self.A_t.copy()
+            self.u_values[t] = self.u
+
+            M = self.M_t.mean(axis=0)
+            S, _ = np.linalg.eig(M)
+            # self.S_values.append(np.sort(S))
+
+        return self.A_t_values
+
+    def online_OLS(self, x_t, x_t_, u_t):
 
         y_t = x_t_ - self.B@u_t
 
         for row_index in range(self.d):
-            prior_precision = self.precision[row_index]
-            prior_mean = self.mean[row_index]
-            posterior_precision = prior_precision + x_t[:, None]@x_t[None, :]
+            prior_moments = self.M_t[row_index]
+            prior_estimate = self.A_t[row_index]
+            posterior_moments = prior_moments + x_t[:, None]@x_t[None, :]
             # print(f'covariates {covariates}')
-            # print(f'precision {precision}')
-            combination = prior_precision@prior_mean + y_t[row_index]*x_t
-            # print(f'combination {combination}')
-            posterior_mean = solve(posterior_precision, combination)
+            # print(f'moments {moments}')
+            combination = prior_moments@prior_estimate + y_t[row_index]*x_t
+            posterior_estimate = solve(posterior_moments, combination)
 
-            self.mean[row_index] = posterior_mean
-            self.precision[row_index] = posterior_precision
-        # print(f'updated mean {self.mean}')
-       
-    
-    def identify(self, T):
-
-        for t in range(1, T):
-
-            # print(f'iteration {t}')
-
-            u_t = self.choose_control()
-            # print(f'u_t has norm {norm(u_t)}')
-            self.u = u_t
-            
-            x_t_ = self.step(self.x, u_t)
-            self.update_posterior(self.x, x_t_, u_t)
-            self.x = x_t_
+            self.A_t[row_index] = posterior_estimate
+            self.M_t[row_index] = posterior_moments
 
 
-            self.estimations_values.append(self.mean.copy())
-            self.u_values.append(self.u)
-    
-        return self.estimations_values
+class Random(Agent):
+
+    def choose_control(self, t):
+        return self.draw_random_control()
+
+
+class Sequential(Agent):
+
+    def choose_control(self, t):
+        M = self.M_t.mean(axis=0)
+        A = self.A_t_values[t] if self.A_star is None else self.A_star
+        u = approximate_D_optimal(M, A, self.B, self.x, self.gamma)
+        u *= self.gamma / norm(u)
+        return u
+
+
+class Offline(Agent):
+
+    # def identify(self, T, A_star=None):
+    #     self.A_star = A_star
+    #     A = self.A_t if self.A_star is None else self.A_star
+    #     self.plan(A, T)
+    #     return super().identify(T, A_star)
+
+    def plan(self, A, T, n_gradient, batch_size):
+
+        x = torch.tensor(self.x, dtype=torch.float)
+        A, B = torch.tensor(A, dtype=torch.float), torch.tensor(
+            self.B, dtype=torch.float)
+        self.planning = Planning(A, B, T, self.gamma, self.sigma, x, 'MSE')
+        self.planning.plan(n_gradient, batch_size)
+
+        self.U = self.planning.U.clone().detach().numpy()
+
+    def choose_control(self, t, A_star=None):
+
+        return self.U[t]
