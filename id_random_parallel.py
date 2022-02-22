@@ -11,14 +11,14 @@ m = 4
 sigma = 1e-2
 gamma = 1
 T = 500
-n_samples = 10
+n_samples = 200
 rho = 0.9
 
 n_gradient, batch_size = 500, 100
 
 agent_name = 'noise'
 agent_name = 'sequential'
-# agent_name = 'offline'
+agent_name = 'offline'
 agent_types = {'noise': Random, 'offline': Offline, 'sequential': Sequential}
 agent_ = agent_types[agent_name]
 
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         # output['error_values'] = error_values
         output['residuals'] = residuals
 
-        output_name = f'{agent_name}_{n_samples}-samples_{task_id}'
+        output_name = f'{agent_name}_T-{T}_{n_samples}-samples_{task_id}'
 
         with open(f'{output_name}.pkl', 'wb') as f:
             pickle.dump(output, f)
