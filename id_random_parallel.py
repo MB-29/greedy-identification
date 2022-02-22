@@ -14,7 +14,7 @@ T = 500
 n_samples = 10
 rho = 0.9
 
-n_gradient, batch_size = 100, 100
+n_gradient, batch_size = 300, 100
 
 agent_name = 'random'
 agent_name = 'sequential'
