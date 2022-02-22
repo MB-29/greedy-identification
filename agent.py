@@ -86,10 +86,14 @@ class Agent:
             # print(f'covariates {covariates}')
             # print(f'moments {moments}')
             combination = prior_moments@prior_estimate + y_t[row_index]*x_t
+            if np.allclose(posterior_moments, 0, atol=1e-4):
+                continue
+            # print(posterior_moments)
+
             posterior_estimate = solve(posterior_moments, combination)
 
-            self.A_t[row_index] = posterior_estimate
             self.M_t[row_index] = posterior_moments
+            self.A_t[row_index] = posterior_estimate
 
 
 class Random(Agent):
@@ -102,6 +106,8 @@ class Sequential(Agent):
 
     def choose_control(self, t):
         M = self.M_t.mean(axis=0)
+        if  np.allclose(M, 0):
+            return self.draw_random_control()
         A = self.A_t_values[t] if self.A_star is None else self.A_star
         u = approximate_D_optimal(M, A, self.B, self.x, self.gamma)
         u *= self.gamma / norm(u)

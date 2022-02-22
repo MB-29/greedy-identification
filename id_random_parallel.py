@@ -17,7 +17,7 @@ rho = 0.9
 n_gradient, batch_size = 300, 100
 
 agent_name = 'random'
-agent_name = 'sequential'
+# agent_name = 'sequential'
 agent_name = 'offline'
 agent_types = {'random': Random, 'offline': Offline, 'sequential': Sequential}
 agent_ = agent_types[agent_name]
@@ -43,8 +43,8 @@ if __name__ == '__main__':
         A_star = A.copy()
         prior_moments = np.zeros((d, d, d))
         for j in range(d):
-            # prior_moments[j] =  np.eye(d) + 0.01*np.diag(abs(np.random.randn(d)))
-            prior_moments[j] =  0.0001*np.diag(abs(np.random.randn(d)))
+        #     # prior_moments[j] =  np.eye(d) + 0.01*np.diag(abs(np.random.randn(d)))
+            prior_moments[j] = 1e-6*np.diag(abs(np.random.randn(d)))
         # prior_moments[0] =  0.01*np.diag(abs(np.random.randn(d)))
 
         agent = agent_(
@@ -81,5 +81,4 @@ if __name__ == '__main__':
 # # plt.plot(error_values)
 # plt.legend()
 # plt.yscale('log')
-# plt.ylim((1e-3, 1))
 # plt.show()
