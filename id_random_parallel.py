@@ -10,16 +10,16 @@ d = 4
 m = 4
 sigma = 1e-2
 gamma = 1
-T = 200
+T = 500
 n_samples = 10
 rho = 0.9
 
-n_gradient, batch_size = 300, 100
+n_gradient, batch_size = 200, 100
 
-agent_name = 'random'
+agent_name = 'noise'
 agent_name = 'sequential'
 agent_name = 'offline'
-agent_types = {'random': Random, 'offline': Offline, 'sequential': Sequential}
+agent_types = {'noise': Random, 'offline': Offline, 'sequential': Sequential}
 agent_ = agent_types[agent_name]
 
 
@@ -55,7 +55,8 @@ if __name__ == '__main__':
                 prior_estimate,
                 prior_moments,
             )
-        agent.plan(A_star, T, n_gradient, batch_size)
+        if agent_name=='offline':
+            agent.plan(A_star, T, n_gradient, batch_size)
 
         # sample_estimation_values = agent.identify(T)
         sample_estimation_values = agent.identify(T, A_star)
@@ -67,18 +68,18 @@ if __name__ == '__main__':
         # output['error_values'] = error_values
         output['residuals'] = residuals
 
-        output_name = f'online_{n_samples}-samples_{task_id}'
+        output_name = f'{agent_name}_{n_samples}-samples_{task_id}'
 
         with open(f'{output_name}.pkl', 'wb') as f:
             pickle.dump(output, f)
 
 
-# error_values = np.linalg.norm(residuals, axis=(2, 3), ord=2)
-# # error_values[index, :] = sample_error_values
-# mean_error = np.mean(error_values, axis=0)
-# yerr = np.sqrt(2*np.var(error_values, axis=0)/n_samples)
-# plt.errorbar(np.arange(T+1), mean_error, yerr=yerr, alpha=0.7)
-# # plt.plot(error_values)
-# plt.legend()
-# plt.yscale('log')
-# plt.show()
+error_values = np.linalg.norm(residuals, axis=(2, 3), ord=2)
+# error_values[index, :] = sample_error_values
+mean_error = np.mean(error_values, axis=0)
+yerr = np.sqrt(2*np.var(error_values, axis=0)/n_samples)
+plt.errorbar(np.arange(T+1), mean_error, yerr=yerr, alpha=0.7)
+# plt.plot(error_values)
+plt.legend()
+plt.yscale('log')
+plt.show()
