@@ -5,7 +5,8 @@ from scipy.optimize import newton, brentq
 
 def approximate_D_optimal(M0, A, B, x, gamma):
 
-    M_inv = np.linalg.inv(M0 + A@x[:, None]@x[None, :]@A.T)
+    # M_inv = np.linalg.inv(M0 + A@x[:, None]@x[None, :]@A.T)
+    M_inv = np.linalg.inv(M0)
     # print(f'x {x}')
     # print(f'A {A}')
     # print(f'M_inv {M_inv}')

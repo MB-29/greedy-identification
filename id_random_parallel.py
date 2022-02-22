@@ -14,11 +14,11 @@ T = 500
 n_samples = 10
 rho = 0.9
 
-n_gradient, batch_size = 200, 100
+n_gradient, batch_size = 500, 100
 
 agent_name = 'noise'
 agent_name = 'sequential'
-agent_name = 'offline'
+# agent_name = 'offline'
 agent_types = {'noise': Random, 'offline': Offline, 'sequential': Sequential}
 agent_ = agent_types[agent_name]
 
@@ -73,10 +73,10 @@ if __name__ == '__main__':
         with open(f'{output_name}.pkl', 'wb') as f:
             pickle.dump(output, f)
 
-
 error_values = np.linalg.norm(residuals, axis=(2, 3), ord=2)
 # error_values[index, :] = sample_error_values
 mean_error = np.mean(error_values, axis=0)
+print(mean_error[-1])
 yerr = np.sqrt(2*np.var(error_values, axis=0)/n_samples)
 plt.errorbar(np.arange(T+1), mean_error, yerr=yerr, alpha=0.7)
 # plt.plot(error_values)
