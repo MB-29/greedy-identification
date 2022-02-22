@@ -8,16 +8,16 @@ from utils import generate_random_A
 
 d = 4
 m = 4
-sigma = 0.1
+sigma = 1e-2
 gamma = 1
-T = 500
+T = 200
 n_samples = 10
 rho = 0.9
 
 n_gradient, batch_size = 300, 100
 
 agent_name = 'random'
-# agent_name = 'sequential'
+agent_name = 'sequential'
 agent_name = 'offline'
 agent_types = {'random': Random, 'offline': Offline, 'sequential': Sequential}
 agent_ = agent_types[agent_name]
