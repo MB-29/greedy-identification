@@ -58,8 +58,8 @@ if __name__ == '__main__':
         if agent_name=='offline':
             agent.plan(A_star, T, n_gradient, batch_size)
 
-        sample_estimation_values = agent.identify(T)
-        # sample_estimation_values = agent.identify(T, A_star)
+        # sample_estimation_values = agent.identify(T)
+        sample_estimation_values = agent.identify(T, A_star)
         sample_residual_values = sample_estimation_values - A
         residuals[sample_index] = sample_residual_values
         # sample_error_values = np.linalg.norm(sample_residual_values, axis=(1, 2))
