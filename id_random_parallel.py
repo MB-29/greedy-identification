@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle 
 
-from agent import Sequential, Random, Offline
+from agents import Greedy, Random, Offline
 from utils import generate_random_A
 
 d = 4
@@ -11,15 +11,15 @@ m = 4
 sigma = 1e-2
 gamma = 1
 T = 100
-n_samples = 10
+n_samples = 500
 rho = 0.9
 
 n_gradient, batch_size = 90, 100
 
 agent_name = 'noise'
 # agent_name = 'sequential'
-agent_name = 'offline'
-agent_types = {'noise': Random, 'offline': Offline, 'sequential': Sequential}
+# agent_name = 'offline'
+agent_types = {'noise': Random, 'offline': Offline, 'sequential': Greedy}
 agent_ = agent_types[agent_name]
 
 

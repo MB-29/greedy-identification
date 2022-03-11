@@ -60,12 +60,12 @@ def maximize_quadratic_ball(Q, b, gamma):
     # print(f'b = {b}')
     # print(f'beta = {beta}')
     mu_l = -eigenvalues[0] + 0.9*(1/gamma)*abs(beta[0]) 
-    mu_u = -eigenvalues[0] + (1/gamma)*(np.linalg.norm(b)) 
-    # print(f'mu_l = {mu_l}, mu_0 = {mu0}, mu_u = {mu_u}')
+    mu_u = -eigenvalues[0] + 1.1*(1/gamma)*(np.linalg.norm(b)) 
+    # print(f'mu_l = {mu_l}, mu_u = {mu_u}')
     # mu0 = np.linalg.norm(b)/gamma -eigenvalues[0] 
     def func(mu):
         return (beta**2 / (eigenvalues+mu)**2).sum() - gamma**2
-    # print(f'f_l = {func(mu_l)}, f0 = {func(mu0)}, f_u = {func(mu_u)}')
+    # print(f'f_l = {func(mu_l)}, f_u = {func(mu_u)}')
     mu = brentq(
         func,
         mu_l,

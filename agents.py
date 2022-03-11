@@ -23,7 +23,6 @@ class Agent:
         self.A_t = A_0.copy()  # shape [d, d]
         self.M_t = M_0.copy()  # shape [d, d, d]
 
-        u_0 = self.draw_random_control()
 
         x = x0 if x0 is not None else np.zeros(self.d)
 
@@ -45,8 +44,6 @@ class Agent:
         u *= self.gamma/norm(u)
         return u
     
-    def plan(self, T):
-        return
 
     def identify(self, T, A_star=None):
 
@@ -57,6 +54,7 @@ class Agent:
         self.u_values = np.zeros((T, self.m))
         
         for t in range(T):
+
             
             u_t = self.choose_control(t)
             self.u = u_t
@@ -102,7 +100,7 @@ class Random(Agent):
         return self.draw_random_control()
 
 
-class Sequential(Agent):
+class Greedy(Agent):
 
     def choose_control(self, t):
         M = self.M_t.mean(axis=0)
@@ -123,6 +121,7 @@ class Offline(Agent):
     #     return super().identify(T, A_star)
 
     def plan(self, A, T, n_gradient, batch_size):
+        print('planning')
 
         x = torch.tensor(self.x, dtype=torch.float)
         A, B = torch.tensor(A, dtype=torch.float), torch.tensor(
