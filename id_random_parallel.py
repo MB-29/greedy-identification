@@ -2,8 +2,9 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle 
+import torch
 
-from agents import Greedy, Random, Offline
+from agents import Greedy, Random, Offline, Gradient
 from utils import generate_random_A
 
 d = 4
@@ -11,15 +12,16 @@ m = 4
 sigma = 1e-2
 gamma = 1
 T = 100
-n_samples = 500
+n_samples = 100
 rho = 0.9
 
-n_gradient, batch_size = 90, 100
+n_gradient, batch_size = 90, 50
 
 agent_name = 'noise'
-# agent_name = 'sequential'
-# agent_name = 'offline'
-agent_types = {'noise': Random, 'offline': Offline, 'sequential': Greedy}
+agent_name = 'offline'
+agent_name = 'sequential'
+# agent_name = 'gradient'
+agent_types = {'noise': Random, 'offline':Offline, 'gradient': Gradient, 'sequential': Greedy}
 agent_ = agent_types[agent_name]
 
 
@@ -55,11 +57,17 @@ if __name__ == '__main__':
                 prior_estimate,
                 prior_moments,
             )
-        if agent_name=='offline':
-            agent.plan(A_star, T, n_gradient, batch_size)
+        if agent_name=='gradient':
+            x0 = torch.zeros(1, d)
+            schedule = [0, T//10, T+1]
+            sample_estimation_values = agent.identify(T, n_gradient, batch_size, A_star=None, schedule=schedule)
+            sample_residual_values = sample_estimation_values - A
+            residuals[sample_index] = sample_residual_values
+            output['residuals'] = residuals
+            continue
 
         # sample_estimation_values = agent.identify(T)
-        sample_estimation_values = agent.identify(T, A_star)
+        sample_estimation_values = agent.identify(T, A_star,)
         sample_residual_values = sample_estimation_values - A
         residuals[sample_index] = sample_residual_values
         # sample_error_values = np.linalg.norm(sample_residual_values, axis=(1, 2))
@@ -70,16 +78,16 @@ if __name__ == '__main__':
 
     output_name = f'{agent_name}_T-{T}_{n_samples}-samples_{task_id}'
 
-    with open(f'{output_name}.pkl', 'wb') as f:
-        pickle.dump(output, f)
+    # with open(f'{output_name}.pkl', 'wb') as f:
+    #     pickle.dump(output, f)
 
-# error_values = np.linalg.norm(residuals, axis=(2, 3), ord=2)
-# # error_values[index, :] = sample_error_values
-# mean_error = np.mean(error_values, axis=0)
-# print(mean_error[-1])
-# yerr = np.sqrt(2*np.var(error_values, axis=0)/n_samples)
-# plt.errorbar(np.arange(T+1), mean_error, yerr=yerr, alpha=0.7)
-# # plt.plot(error_values)
-# plt.legend()
-# plt.yscale('log')
-# plt.show()
+error_values = np.linalg.norm(residuals, axis=(2, 3), ord=2)
+# error_values[index, :] = sample_error_values
+mean_error = np.mean(error_values, axis=0)
+print(f'mean error {mean_error[-1]:e}')
+yerr = np.sqrt(2*np.var(error_values, axis=0)/n_samples)
+plt.errorbar(np.arange(T+1), mean_error, yerr=yerr, alpha=0.7)
+# plt.plot(error_values)
+plt.legend()
+plt.yscale('log')
+plt.show()

@@ -53,19 +53,19 @@ class Agent:
         self.A_t_values[0] = self.A_t
         self.u_values = np.zeros((T, self.m))
         
+        self.x_values = torch.zeros(T+1, self.d)
         for t in range(T):
 
-            
             u_t = self.choose_control(t)
-            self.u = u_t
 
             x_t_ = self.dynamics_step(self.x, u_t)
 
             self.online_OLS(self.x, x_t_, u_t)
             self.x = x_t_
+            self.x_values[t+1] = torch.tensor(x_t_)
 
             self.A_t_values[t+1] = self.A_t.copy()
-            self.u_values[t] = self.u
+            self.u_values[t] = u_t
 
             M = self.M_t.mean(axis=0)
             S, _ = np.linalg.eig(M)
@@ -120,13 +120,13 @@ class Offline(Agent):
     #     self.plan(A, T)
     #     return super().identify(T, A_star)
 
-    def plan(self, A, T, n_gradient, batch_size):
+    def plan(self, A, T, Xt, n_gradient, batch_size):
         print('planning')
 
-        x = torch.tensor(self.x, dtype=torch.float)
+        # x = torch.tensor(self.x, dtype=torch.float)
         A, B = torch.tensor(A, dtype=torch.float), torch.tensor(
             self.B, dtype=torch.float)
-        self.planning = Planning(A, B, T, self.gamma, self.sigma, x, 'MSE')
+        self.planning = Planning(A, B, T, self.gamma, self.sigma, Xt, 'MSE')
         self.planning.plan(n_gradient, batch_size)
 
         self.U = self.planning.U.clone().detach().numpy()
@@ -134,3 +134,43 @@ class Offline(Agent):
     def choose_control(self, t, A_star=None):
 
         return self.U[t]
+
+class Gradient(Agent):
+
+    def plan(self, A, T, Xt, n_gradient, batch_size):
+        print('planning')
+
+        A, B = torch.tensor(A, dtype=torch.float), torch.tensor(
+            self.B, dtype=torch.float)
+        self.planning = Planning(A, B, T, self.gamma, self.sigma, Xt, 'A-optimality')
+        self.planning.plan(n_gradient, batch_size)
+
+        return self.planning.U.clone().detach().numpy()
+
+    def identify(self, T, n_gradient, batch_size, A_star=None, schedule=None):
+        self.schedule = schedule
+        self.n_gradient = n_gradient
+        self.batch_size = batch_size
+        self.i = 0
+        
+        return super().identify(T, A_star)
+
+    def choose_control(self, t):
+
+        if t < self.schedule[1]:
+            return self.draw_random_control()
+
+        A = self.A_t_values[t] if self.A_star is None else self.A_star
+        ti_ = self.schedule[self.i+1]
+        if t == ti_:
+            self.i += 1
+            ti__ = self.schedule[self.i+1]
+            Xt = self.x_values[:t]
+            self.U = self.plan(A, ti__, Xt, self.n_gradient, self.batch_size)
+
+        ti = self.schedule[self.i]
+
+        return self.U[t-ti]
+
+
+    

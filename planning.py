@@ -30,6 +30,12 @@ def test(x, A, B, U, T, sigma):
 def D_optimality(X, W):
     M = X.permute(0, 2, 1)@X
     return -torch.logdet(M).mean()
+
+
+def A_optimality(X, W):
+    M = X.permute(0, 2, 1)@X
+    S = torch.real(torch.linalg.eigvals(M))
+    return (1/S**2).sum(dim=1).mean()
 # def E_optimality(X, W):
 #     M = X.permute(0, 2, 1)@X
 #     S = -torch.linalg.svdvals(M)[:, -1].mean()
@@ -40,13 +46,15 @@ def MSE_error(X, W):
 
 
 class Planning:
-    def __init__(self, A, B, T, gamma, sigma, x0, functional):
+    def __init__(self, A, B, T, gamma, sigma, Xt, functional):
         super().__init__()
         self.T = T
         self.A = A
         self.B = B
         self.d, self.m = B.shape
-        self.x = x0
+        self.t_, _ = Xt.shape
+        self.Xt = Xt
+        
 
         self.gamma = gamma
         self.sigma = sigma
@@ -56,21 +64,26 @@ class Planning:
 
         self.functional = {
             'D-optimality': D_optimality,   
+            'A-optimality': A_optimality,   
             # 'E-optimality': E_optimality,
             'MSE': MSE_error
             }[functional]
 
     def forward(self, x):
         U = self.gamma * np.sqrt(self.T) * self.U / torch.norm(self.U)
-        x_values, W = integration(x, self.A, self.B, U, self.T, self.sigma)
+        x_values, W = integration(x, self.A, self.B, U, self.T - self.t_+1, self.sigma)
         return x_values, W, U
 
     def plan(self, n_steps, batch_size, learning_rate=0.1):
         optimizer = torch.optim.Adam([self.U], lr=learning_rate)
         loss_values = []
         for step_index in range(n_steps):
-            x = self.x.unsqueeze(0).expand(batch_size, self.d)
-            x_values, W, U = self.forward(x)
+            x_values = torch.zeros(batch_size, self.T+1, self.d)
+            x = x_values[:, self.t_-1]
+            # print(self.Xt.shape)
+            x_values[:, :self.t_] = self.Xt
+            trajectory, W, U = self.forward(x)
+            x_values[:, self.t_:] += trajectory[:, 1:]
             X = x_values[:, :-1]
 
             loss = self.functional(X, W)
