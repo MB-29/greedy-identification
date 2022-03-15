@@ -13,16 +13,16 @@ d = 4
 m = 4
 sigma = 1e-2
 gamma = 1
-T = 200
-n_samples = 10
+n_samples = 500
 rho = 0.9
 
-n_gradient, batch_size = 150, 100
+n_gradient, batch_size = 120, 100
 test_batch_size = 200
 
 
 if __name__ == '__main__':
     task_id = int(sys.argv[1])
+    T = 100 + task_id * 4
 
     output = {
         'sigma': sigma,
