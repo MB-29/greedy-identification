@@ -25,7 +25,7 @@ def test(x, A, B, U, T, sigma):
     residuals = estimate_values - A.unsqueeze(0)
     # X =  x_values[:, :-1]
     # residuals = X.pinverse()@W
-    return torch.linalg.norm(residuals, dim=(1, 2))
+    return torch.linalg.norm(residuals, dim=(1, 2), ord='fro')
 
 def D_optimality(X, W):
     M = X.permute(0, 2, 1)@X

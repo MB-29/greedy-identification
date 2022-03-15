@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle 
+import pickle
 import torch
 import time
 
@@ -24,7 +24,13 @@ test_batch_size = 200
 if __name__ == '__main__':
     task_id = int(sys.argv[1])
 
-    output = {'sigma':sigma, 'gamma':gamma, 'T':T}
+    output = {
+        'sigma': sigma,
+        'gamma': gamma,
+        'T': T,
+        'n_gradient': n_gradient,
+        'batch_size': batch_size
+        }
 
     error = np.zeros((n_samples, n_gradient))
     time_values = np.zeros(n_samples)
@@ -32,8 +38,10 @@ if __name__ == '__main__':
 
         A = rho*generate_random_A(d)
         B = np.eye(d, m)
-        A_, B_ = torch.tensor(A, dtype=torch.float), torch.tensor(B, dtype=torch.float)
+        A_, B_ = torch.tensor(A, dtype=torch.float), torch.tensor(
+            B, dtype=torch.float)
         # B = np.random.randn(d, m)
+
         def dynamics_step(x, u):
             # assert (np.linalg.norm(u) <= gamma *(1.1))
             noise = sigma * np.random.randn(d)
@@ -41,25 +49,26 @@ if __name__ == '__main__':
 
         prior_estimate = np.zeros((d, d))
         A_star = A.copy()
-        
+
         prior_moments = np.zeros((d, d, d))
         for j in range(d):
-        #     # prior_moments[j] =  np.eye(d) + 0.01*np.diag(abs(np.random.randn(d)))
+            #     # prior_moments[j] =  np.eye(d) + 0.01*np.diag(abs(np.random.randn(d)))
             prior_moments[j] = 1e-6*np.diag(abs(np.random.randn(d)))
         # prior_moments[0] =  0.01*np.diag(abs(np.random.randn(d)))
 
         agent = Gradient(
-                dynamics_step,
-                B,
-                gamma,
-                sigma,
-                prior_estimate,
-                prior_moments,
-            )
+            dynamics_step,
+            B,
+            gamma,
+            sigma,
+            prior_estimate,
+            prior_moments,
+        )
         x0 = torch.zeros(1, d)
         schedule = [0, T//10, T]
         start_time = time.time()
-        agent.identify(T, n_gradient, batch_size, A_star=None, schedule=schedule)
+        agent.identify(T, n_gradient, batch_size,
+                       A_star=None, schedule=schedule)
         stop_time = time.time()
         duration = stop_time - start_time
         time_values[sample_index] = duration
