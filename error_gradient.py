@@ -78,14 +78,14 @@ if __name__ == '__main__':
 
     output_name = f'T-{T}_gradient-{n_gradient}_{n_samples}-samples_{task_id}'
 
-    # with open(f'{output_name}.pkl', 'wb') as f:
-    #     pickle.dump(output, f)
+    with open(f'{output_name}.pkl', 'wb') as f:
+        pickle.dump(output, f)
 
 # error_values[index, :] = sample_error_values
-mean_error = np.mean(error, axis=0)
-yerr = np.sqrt(2*np.var(error, axis=0)/n_samples)
-plt.errorbar(np.arange(n_gradient), mean_error, yerr=yerr, alpha=0.7)
-# plt.plot(error_values)
-plt.legend()
-plt.yscale('log')
-plt.show()
+# mean_error = np.mean(error, axis=0)
+# yerr = np.sqrt(2*np.var(error, axis=0)/n_samples)
+# plt.errorbar(np.arange(n_gradient), mean_error, yerr=yerr, alpha=0.7)
+# # plt.plot(error_values)
+# plt.legend()
+# plt.yscale('log')
+# plt.show()
