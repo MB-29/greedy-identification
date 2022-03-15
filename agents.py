@@ -153,7 +153,7 @@ class Gradient(Agent):
         self.batch_size = batch_size
         self.i = 0
 
-        self.U_values = np.zeros((T, n_gradient, self.d))
+        self.U_values = np.zeros((n_gradient, T, self.m))
         
         return super().identify(T, A_star)
 
@@ -174,7 +174,7 @@ class Gradient(Agent):
 
         for gradient_step in range(self.n_gradient):
             u_gradient = self.planning.U_values[gradient_step][t-ti].numpy()
-            self.U_values[t, gradient_step] = u_gradient
+            self.U_values[gradient_step, t] = u_gradient
 
         return self.U[t-ti]
 

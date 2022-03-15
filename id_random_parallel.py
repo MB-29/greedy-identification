@@ -59,7 +59,7 @@ if __name__ == '__main__':
             )
         if agent_name=='gradient':
             x0 = torch.zeros(1, d)
-            schedule = [0, T//10, T+1]
+            schedule = [0, T//10, T]
             sample_estimation_values = agent.identify(T, n_gradient, batch_size, A_star=None, schedule=schedule)
             sample_residual_values = sample_estimation_values - A
             residuals[sample_index] = sample_residual_values
@@ -73,8 +73,8 @@ if __name__ == '__main__':
         # sample_error_values = np.linalg.norm(sample_residual_values, axis=(1, 2))
         # error_values[sample_index, :] = sample_error_values
 
-        # output['error_values'] = error_values
-        output['residuals'] = residuals
+    # output['error_values'] = error_values
+    output['residuals'] = residuals
 
     output_name = f'{agent_name}_T-{T}_{n_samples}-samples_{task_id}'
 
