@@ -13,11 +13,11 @@ d = 4
 m = 4
 sigma = 1e-2
 gamma = 1
-T = 100
+T = 200
 n_samples = 10
 rho = 0.9
 
-n_gradient, batch_size = 120, 100
+n_gradient, batch_size = 150, 100
 test_batch_size = 200
 
 
