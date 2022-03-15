@@ -53,13 +53,14 @@ class Planning:
         self.B = B
         self.d, self.m = B.shape
         self.t_, _ = Xt.shape
+        self.tau = T - self.t_ + 1
         self.Xt = Xt
         
 
         self.gamma = gamma
         self.sigma = sigma
 
-        self.U = torch.randn(self.T, self.m, requires_grad=True)
+        self.U = torch.randn(self.tau, self.m, requires_grad=True)
         self.U_values = []  
 
         self.functional = {
@@ -71,7 +72,7 @@ class Planning:
 
     def forward(self, x):
         U = self.gamma * np.sqrt(self.T) * self.U / torch.norm(self.U)
-        x_values, W = integration(x, self.A, self.B, U, self.T - self.t_+1, self.sigma)
+        x_values, W = integration(x, self.A, self.B, U, self.tau, self.sigma)
         return x_values, W, U
 
     def plan(self, n_steps, batch_size, learning_rate=0.1):

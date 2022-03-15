@@ -152,6 +152,8 @@ class Gradient(Agent):
         self.n_gradient = n_gradient
         self.batch_size = batch_size
         self.i = 0
+
+        self.U_values = np.zeros((T, n_gradient, self.d))
         
         return super().identify(T, A_star)
 
@@ -169,6 +171,10 @@ class Gradient(Agent):
             self.U = self.plan(A, ti__, Xt, self.n_gradient, self.batch_size)
 
         ti = self.schedule[self.i]
+
+        for gradient_step in range(self.n_gradient):
+            u_gradient = self.planning.U_values[gradient_step][t-ti].numpy()
+            self.U_values[t, gradient_step] = u_gradient
 
         return self.U[t-ti]
 
