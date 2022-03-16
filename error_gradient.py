@@ -16,14 +16,13 @@ gamma = 1
 n_samples = 500
 rho = 0.9
 
-n_gradient, batch_size = 120, 100
-test_batch_size = 200
+n_gradient, batch_size = 150, 200
+test_batch_size = 100
 
 
 if __name__ == '__main__':
     task_id = int(sys.argv[1])
-    T = 100 + task_id * 4
-
+    T = 20 + task_id * 4
     output = {
         'sigma': sigma,
         'gamma': gamma,

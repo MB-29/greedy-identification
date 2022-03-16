@@ -11,7 +11,7 @@ d = 4
 m = 4
 sigma = 1e-2
 gamma = 1
-T = 100
+T = 500
 n_samples = 500
 rho = 0.9
 
@@ -78,8 +78,8 @@ if __name__ == '__main__':
 
     output_name = f'{agent_name}_T-{T}_{n_samples}-samples_{task_id}'
 
-    # with open(f'{output_name}.pkl', 'wb') as f:
-    #     pickle.dump(output, f)
+    with open(f'{output_name}.pkl', 'wb') as f:
+        pickle.dump(output, f)
 
 error_values = np.linalg.norm(residuals, axis=(2, 3), ord='fro')
 # error_values[index, :] = sample_error_values
