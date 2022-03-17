@@ -11,8 +11,8 @@ d = 4
 m = 4
 sigma = 1e-2
 gamma = 1
-T = 500
-n_samples = 500
+T = 300
+n_samples = 5000
 rho = 0.9
 
 n_gradient, batch_size = 120, 100
