@@ -34,7 +34,7 @@ def D_optimality(X, W):
 
 def A_optimality(X, W):
     M = X.permute(0, 2, 1)@X
-    S = torch.real(torch.linalg.eigvals(M))
+    S = torch.linalg.svdvals(X)
     return (1/S**2).sum(dim=1).mean()
 # def E_optimality(X, W):
 #     M = X.permute(0, 2, 1)@X
