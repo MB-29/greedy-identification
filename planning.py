@@ -36,17 +36,32 @@ def A_optimality(X, W):
     M = X.permute(0, 2, 1)@X
     S = torch.linalg.svdvals(X)
     return (1/S**2).sum(dim=1).mean()
-# def E_optimality(X, W):
-#     M = X.permute(0, 2, 1)@X
-#     S = -torch.linalg.svdvals(M)[:, -1].mean()
-#     return -torch.logdet(X.permute(0, 2, 1)@X).mean()
+
 def MSE_error(X, W):
     residual = X.pinverse()@W
     return torch.norm(residual, dim=(1,2)).mean()
 
 
 class Planning:
+    """Gradient-based planning over some epoch. 
+    """
     def __init__(self, A, B, T, gamma, sigma, Xt, functional):
+        """
+        :param A: Estimation of the dynamics matrix.
+        :type A: size d x d numpy array
+        :param B: Control matrix.
+        :type B: size d x m numpy array
+        :param T: Planning time horizon.
+        :type T: int
+        :param gamma: gamma**2 is the maximal power.
+        :type gamma: float
+        :param sigma: Size of the noise.
+        :type sigma: float
+        :param Xt: Past trajectory, up to time t.
+        :type Xt: size t x d numpy array
+        :param functional: Planning functional.
+        :type functional: function
+        """
         super().__init__()
         self.T = T
         self.A = A
@@ -66,13 +81,12 @@ class Planning:
         self.functional = {
             'D-optimality': D_optimality,   
             'A-optimality': A_optimality,   
-            # 'E-optimality': E_optimality,
             'MSE': MSE_error
             }[functional]
 
     def forward(self, x):
         U = self.gamma * np.sqrt(self.T) * self.U / torch.norm(self.U)
-        x_values, W = integration(x, self.A, self.B, U, self.tau, self.sigma)
+        x_values, W = integration(x, self.A, self.B, U, self.tau, 0)
         return x_values, W, U
 
     def plan(self, n_steps, batch_size, learning_rate=0.1):

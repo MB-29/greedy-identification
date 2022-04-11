@@ -58,6 +58,20 @@ class Agent:
     
 
     def identify(self, T, A_star=None):
+        """System identification process
+
+        :param T: Time horizon, i.e. total number of observations
+        of the true system.
+        :type T: int
+        :param A_star: True dynamics for the oracle. If provided,
+        this ground truth matrix will be used for planning.
+        Note that the matrix used for the observation of the true system
+        is contained in self.dynamics_step.
+        Defaults to None
+        :type A_star: size d x d numpy array, optional
+        :return: Estimates of A_star over time
+        :rtype: size T x d x d numpy array
+        """
 
         self.A_star = A_star
 
