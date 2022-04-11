@@ -8,6 +8,8 @@ Implementation of our greedy algorithm along with baselines.
 
 from agents import Random, Greedy, Gradient
 
+# ...
+
 def dynamics_step(x, u):
             noise = sigma * np.random.randn(d)
             return A_star@x + B@u + noise
@@ -23,6 +25,6 @@ agent = agent_(
     prior_moments,
     )
 
-sample_estimation_values = np.array(agent.identify(T))
+sample_estimation_values = agent.identify(T)
 
 ```
