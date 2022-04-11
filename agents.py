@@ -70,7 +70,7 @@ class Agent:
         Defaults to None
         :type A_star: size d x d numpy array, optional
         :return: Estimates of A_star over time
-        :rtype: size T x d x d numpy array
+        :rtype: size T+1 list of d x d numpy array
         """
 
         self.A_star = A_star
