@@ -25,6 +25,6 @@ agent = agent_(
     prior_moments,
     )
 
-sample_estimation_values = np.array(agent.identify(T))
+sample_estimation_values = agent.identify(T)
 
 ```
