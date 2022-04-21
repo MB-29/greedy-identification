@@ -1,9 +1,10 @@
 import numpy as np
-from scipy.optimize import newton, brentq
+from scipy.optimize import brentq
 
 
 def greedy_optimal_input(M, A, B, x, gamma):
-    """Compute the one-step-ahead optimal design for the estimation of A.
+    """Compute the one-step-ahead optimal design for the estimation of A:
+        maximize log det (x_^T x_)
 
     :param M: Current moment matrix;
     :type M: size d x d numpy array

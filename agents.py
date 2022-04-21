@@ -1,10 +1,11 @@
 import numpy as np
 from numpy.linalg import norm
-from scipy.linalg import solve
-import torch
+from scipy.linalg import solve, solve_discrete_are
+# import torch
 
 from quadratic import *
-from planning import Planning
+from utils import lstsq_update
+# from planning import Planning
 
 
 class Agent:
@@ -52,6 +53,8 @@ class Agent:
 
 
     def draw_random_control(self):
+        """Random inputs with maximal energy.
+        """
         u = np.random.randn(self.m)
         u *= self.gamma/norm(u)
         return u
@@ -79,7 +82,7 @@ class Agent:
         self.A_t_values[0] = self.A_t
         self.u_values = np.zeros((T, self.m))
         
-        self.x_values = torch.zeros(T+1, self.d)
+        # self.x_values = torch.zeros(T+1, self.d)
         for t in range(T):
 
             u_t = self.choose_control(t)
@@ -88,13 +91,13 @@ class Agent:
 
             self.online_OLS(self.x, x_t_, u_t)
             self.x = x_t_
-            self.x_values[t+1] = torch.tensor(x_t_)
+            # self.x_values[t+1] = torch.tensor(x_t_)
 
             self.A_t_values[t+1] = self.A_t.copy()
             self.u_values[t] = u_t
 
-            M = self.M_t.mean(axis=0)
-            S, _ = np.linalg.eig(M)
+            # M = self.M_t.mean(axis=0)
+            # S, _ = np.linalg.eig(M)
 
         return self.A_t_values
 
@@ -112,16 +115,18 @@ class Agent:
         y_t = x_t_ - self.B@u_t
 
         for row_index in range(self.d):
-            prior_moments = self.M_t[row_index]
+            prior_gram = self.M_t[row_index]
             prior_estimate = self.A_t[row_index]
-            posterior_moments = prior_moments + x_t[:, None]@x_t[None, :]
-            combination = prior_moments@prior_estimate + y_t[row_index]*x_t
-            if np.allclose(posterior_moments, 0, atol=1e-4):
-                continue
 
-            posterior_estimate = solve(posterior_moments, combination)
+            # posterior_gram = prior_gram + x_t[:, None]@x_t[None, :]
+            # combination = prior_gram@prior_estimate + y_t[row_index]*x_t
+            # # if np.allclose(posterior_gram, 0, atol=1e-4):
+            # #     continue
 
-            self.M_t[row_index] = posterior_moments
+            # posterior_estimate = solve(posterior_gram, combination)
+            posterior_estimate, posterior_gram = lstsq_update(prior_estimate, prior_gram, x_t, y_t[row_index])
+
+            self.M_t[row_index] = posterior_gram
             self.A_t[row_index] = posterior_estimate
 
 
@@ -193,4 +198,16 @@ class Gradient(Agent):
         return self.U[t-ti]
 
 
-    
+class Riccati(Agent):
+
+    def choose_control(self, t):
+        A = self.A_t
+        B = self.B
+        Q = np.eye(self.d)
+        R = np.eye(self.m)
+        P = solve_discrete_are(A, B, Q, R)
+        K = solve(R+B.T@P@B, B.T@P@A)
+        u = -K@self.x
+        if norm(u) > 1e-6:
+            u *= self.gamma / norm(u)
+        return u
